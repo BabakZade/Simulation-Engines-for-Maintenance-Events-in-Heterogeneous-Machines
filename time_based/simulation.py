@@ -14,6 +14,224 @@ from .failure_time import getFailureTime
 from .failure_type import get_failure_type, get_minor_failure_type
 from .failure_cost import simulate_failure_costs, simulate_periodical_pm
 
+
+# =========================================
+# Simulation failures for Single Cycle: From AGAN State to Failure or Observation End 
+# =========================================
+def simulate_single_cycle(t_obs, machine_id, m, delta_t,
+                          include_minor, T, push,
+                          model_type_minor, shape_minor, scale_minor, intercept_minor,
+                          with_covariates_minor, fixed_covs, dynamic_covs, beta_fixed, beta_dynamic,
+                          include_catas, model_type_catas, shape_catas, scale_catas, intercept_catas,
+                          with_covariates_catas, beta_multinom_fixed, beta_multinom_dynamic,
+                          n_minor_types, cov_update_fn=None):
+    """
+    Simulate a single cycle from AGAN state until either catastrophic failure or observation end (which comes first)
+    
+    Parameters:
+    -----------
+    t_obs : float
+        Observation time
+    cov_update_fn : callable or None
+        Custom function to update dynamic covariates.
+        Function signature: cov_update_fn(dynamic_covs, failure_type, valid_indices, machine_id)
+        Should return: (updated_dynamic_covs, was_updated)
+        If None, no covariate update is performed.
+    
+    Returns:
+    --------
+    tuple : (failure_index, failure_time, risk_type, failure_type, censor_status, updated_dynamic_covs)
+        - failure_index: list of failure indices
+        - failure_time: list of failure times
+        - risk_type: list of risk types (1=minor, 2=catastrophic)
+        - failure_type: list of specific failure types (minor failure 1,2,...)
+        - censor_status: list of censoring status (1=observed, 0=censored)
+        - updated_dynamic_covs: updated dynamic covariates array
+    """
+    failure_index = []
+    failure_time = []
+    risk_type = []
+    failure_type = []
+    censor_status = []  # Censoring status: 1=observed failure, 0=censored
+
+    s = 0
+    cumulative_integrals_minor = []
+    cumulative_integrals_catas = []
+    cumulative_integrals = []
+    cumulative_value = 0
+    s_record = [0]
+
+    valid_indices = -1  # Initial failure index
+    ft = -1  # Initial failure time
+    f_type = -1  # Initial minor failure type
+    dynamic_covs_changed = False  # Flag for dynamic covariate change
+
+    # Continue until failure time exceeds observation time
+    while ft < t_obs:
+        ###### Get failure time
+        result = getFailureTime(s, cumulative_integrals_minor, cumulative_integrals_catas, cumulative_integrals,
+                    dynamic_covs_changed, machine_id, valid_indices, m, delta_t,
+                    # Minor failure parameters
+                    include_minor=include_minor,
+                    model_type_minor=model_type_minor, shape_minor=shape_minor, scale_minor=scale_minor, intercept_minor=intercept_minor,
+                    fixed_covs=fixed_covs, dynamic_covs=dynamic_covs, beta_fixed=beta_fixed, beta_dynamic=beta_dynamic,
+                    with_covariates_minor=with_covariates_minor, T=T, push=push,
+                    # Catastrophic failure parameters
+                    include_catas=include_catas,
+                    model_type_catas=model_type_catas, shape_catas=shape_catas, scale_catas=scale_catas, intercept_catas=intercept_catas,
+                    with_covariates_catas=with_covariates_catas)
+
+        valid_indices, ft, s, cumulative_integrals_minor, cumulative_integrals_catas, cumulative_integrals, is_censored = result
+
+        updated_dynamic_covs = dynamic_covs.copy() if dynamic_covs is not None else None  # Default: return initial values if not updated
+        
+        if is_censored:
+            # Censored case: record censoring event and stop
+            failure_index.append(m)  # the last time point
+            failure_time.append(t_obs)  # Record observation end time
+            risk_type.append(0)  # Censored event
+            failure_type.append(0)  # Censored event
+            censor_status.append(0)  # 0=censored
+            break
+
+        # Check if failure time exceeds observation time
+        if ft >= t_obs:
+            # No failure before observation end, record as censored
+            failure_index.append(m)
+            failure_time.append(t_obs)
+            risk_type.append(0)
+            failure_type.append(0)
+            censor_status.append(0)
+            break
+
+        # Normal failure case
+        failure_index.append(valid_indices)
+        failure_time.append(ft)
+        censor_status.append(1)  # 1=observed failure
+
+        ##### Determine failure type
+        dynamic_cov_t = dynamic_covs[valid_indices] if (dynamic_covs is not None) else None
+        p_minor, type_risk = get_failure_type(machine_id, ft, T, push, scale_minor, intercept_minor, shape_minor,
+                                    with_covariates_minor, model_type_minor,
+                                    fixed_covs, dynamic_cov_t, beta_fixed, beta_dynamic,
+                                    scale_catas, shape_catas, intercept_catas, model_type_catas, with_covariates_catas)
+        risk_type.append(type_risk)
+
+        # Continue even if catastrophic failure, as observation time is fixed
+        if type_risk == 2:
+            failure_type.append(-1)  # Ensure list lengths match
+            break
+        else:
+            f_type = get_minor_failure_type(machine_id, beta_multinom_fixed, beta_multinom_dynamic, 
+                                           fixed_covs, dynamic_cov_t, n_minor_types)
+            failure_type.append(f_type)
+            
+            # Apply custom covariate update function if provided
+            if cov_update_fn is not None and dynamic_covs is not None:
+                updated_dynamic_covs, was_updated = cov_update_fn(
+                    dynamic_covs, f_type, valid_indices, machine_id
+                )
+                if was_updated:
+                    dynamic_covs = updated_dynamic_covs.copy()
+                    dynamic_covs_changed = True
+
+    return failure_index, failure_time, risk_type, failure_type, censor_status, updated_dynamic_covs
+
+# =========================================
+# Simulation failures for Complete Observation Period 
+# =========================================
+def simulation_complete_observed_period(
+        t_obs, machine_id, m, n_dynamic_features, delta_t, T, push,
+        include_minor, model_type_minor, shape_minor, scale_minor, intercept_minor,
+        with_covariates_minor, include_catas, model_type_catas, shape_catas, scale_catas, intercept_catas,
+        with_covariates_catas, fixed_covs, dynamic_covs, beta_fixed, beta_dynamic,
+        beta_multinom_fixed, beta_multinom_dynamic, n_minor_types, cov_update_fn=None):
+    """
+    Complete observation period simulation, handling resets after catastrophic failures
+    Supports both minor and catastrophic failures with optional covariates
+    
+    Returns:
+    --------
+    tuple : Complete simulation results including failure indices, times, types, and covariate trajectories
+    """
+    # Store results from all cycles
+    all_failure_index = []
+    all_real_failure_time = []
+    all_abs_failure_time = []
+    all_risk_type = []
+    all_failure_type = []
+    all_censor_status = []
+
+    # allow missing dynamic covariates
+    if dynamic_covs is not None:
+        n_dynamic_features = dynamic_covs.shape[1]
+        all_dynamic_covs = np.empty((0, n_dynamic_features), dtype=float)
+        initial_dynamic_covs = dynamic_covs.copy()
+    else:
+        n_dynamic_features = 0
+        all_dynamic_covs = None              # keep None to skip concatenations safely
+        initial_dynamic_covs = None
+
+    #updated_dynamic_covs = None
+
+    t_obs_remain = t_obs
+    current_time_offset = 0.0
+    absolute_index_offset = 0
+
+    while t_obs_remain > 0:
+        # Current number of intervals
+        current_m = (len(dynamic_covs) - 1) if (dynamic_covs is not None) else m
+
+        # Run single cycle simulation
+        failure_index, failure_time, risk_type, failure_type, censor_status, updated_dynamic_covs = simulate_single_cycle(
+            t_obs_remain, machine_id, current_m, delta_t,
+            include_minor, T, push,
+            model_type_minor, shape_minor, scale_minor, intercept_minor,
+            with_covariates_minor, fixed_covs, dynamic_covs, beta_fixed, beta_dynamic,
+            include_catas, model_type_catas, shape_catas, scale_catas, intercept_catas,
+            with_covariates_catas, beta_multinom_fixed, beta_multinom_dynamic,
+            n_minor_types, cov_update_fn)
+
+        # Adjust failure times and indices to absolute values
+        abs_failure_time = [ft + current_time_offset if ft > 0 else ft for ft in failure_time]
+        abs_failure_index = [fi + absolute_index_offset if fi > 0 else fi for fi in failure_index]
+
+        # Save results
+        all_failure_index.extend(abs_failure_index)
+        all_real_failure_time.extend(failure_time)  #failure time in its cycle (restes if a catatrophic failure occurs)
+        all_abs_failure_time.extend(abs_failure_time) #absolute failure time in the observation horizon
+        all_risk_type.extend(risk_type)
+        all_failure_type.extend(failure_type)
+        all_censor_status.extend(censor_status)
+
+        # Check for catastrophic failure
+        if (len(failure_type) > 0 and failure_type[-1] == -1 and
+            len(failure_time) > 0 and failure_time[-1] < t_obs_remain):
+            catastrophic_time = all_abs_failure_time[-1]
+
+            # Update remaining observation time and time offset
+            t_obs_remain = t_obs - catastrophic_time
+            current_time_offset = catastrophic_time
+
+            # Update absolute index offset
+            absolute_index_offset = abs_failure_index[-1]
+
+            if initial_dynamic_covs is not None:
+                # Reset dynamic_covs to AGAN state for remaining time
+                dynamic_covs = initial_dynamic_covs[absolute_index_offset:].copy()
+            if all_dynamic_covs is not None and updated_dynamic_covs is not None:
+                # Truncate all_dynamic_covs: keep only pre-catastrophic portion
+                k = int(failure_index[-1])
+                all_dynamic_covs = np.concatenate((all_dynamic_covs, updated_dynamic_covs[:k]), axis=0)
+        else:
+            if all_dynamic_covs is not None and updated_dynamic_covs is not None:
+                all_dynamic_covs = np.concatenate((all_dynamic_covs, updated_dynamic_covs), axis=0)
+            break
+
+    return (all_failure_index, all_real_failure_time, all_abs_failure_time,
+            all_risk_type, all_failure_type, all_censor_status, all_dynamic_covs)
+
+
 # =========================================
 # Simulation of maintenances (failure_PM) and costs for Complete Observation Period 
 # =========================================
