@@ -338,23 +338,7 @@ if __name__ == "__main__":
         print("-"*80)
         
         fleet_costs = fleet_res['fleet_costs']
-        summary_stats = fleet_res['summary_statistics']
-        policy_summary = fleet_res['policy_summary']
-        
         print(f"Number of machines: {fleet_res['n_machines']}")
-        print(f"Observation time: {summary_stats['obs_time']}")
-        
-        # Print policy summary
-        print(f"\nMaintenance Policy Summary:")
-        print(f"  Level-only strategy: {policy_summary['n_level_only']} machines")
-        print(f"  Time-and-level strategy: {policy_summary['n_time_and_level']} machines")
-        print(f"  PM_level - Min: {policy_summary['PM_level_stats']['min']:.1f}, "
-              f"Max: {policy_summary['PM_level_stats']['max']:.1f}, "
-              f"Mean: {policy_summary['PM_level_stats']['mean']:.2f}")
-        if policy_summary['PM_interval_stats']['mean'] is not None:
-            print(f"  PM_interval - Min: {policy_summary['PM_interval_stats']['min']:.1f}, "
-                  f"Max: {policy_summary['PM_interval_stats']['max']:.1f}, "
-                  f"Mean: {policy_summary['PM_interval_stats']['mean']:.2f}")
         
         # Print cost summary
         print(f"\nCost Summary:")
