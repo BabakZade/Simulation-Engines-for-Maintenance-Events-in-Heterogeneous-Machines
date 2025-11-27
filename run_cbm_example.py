@@ -2,11 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from condition_based.degradation_sim.covariates import CovariateSpec
-from condition_based.degradation_sim.cost import CostParams
-from condition_based.degradation_sim.repair import sample_post_repair_mixed
-
-from condition_based.multi_machine_sim import simulate_multiple_machines
+from condition_based.covariates import CovariateSpec
+from condition_based.cost import CostParams
+from condition_based.repair import sample_post_repair_mixed
+from condition_based.multi_machine_sim import simulate_cbm_for_fleet
 
 if __name__ == "__main__":
     
