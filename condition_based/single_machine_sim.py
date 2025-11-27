@@ -8,10 +8,10 @@ with maintenance actions and covariate effects.
 import numpy as np
 from typing import Dict, Any, List, Callable, Optional
 
-from covariates import CovariateManager, CovariateSpec
-from degradation import generate_degradation_increment_with_covariates, add_observation_noise
-from repair import sample_post_repair_mixed, compute_repair_effectiveness
-from cost import CostParams, compute_maintenance_cost
+from .covariates import CovariateManager, CovariateSpec
+from .degradation import generate_degradation_increment_with_covariates, add_observation_noise
+from .repair import sample_post_repair_mixed, compute_repair_effectiveness
+from .cost import CostParams, compute_maintenance_cost
 
 
 def simulate_path_with_covariates(
