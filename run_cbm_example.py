@@ -5,7 +5,7 @@ import pandas as pd
 from condition_based.covariates import CovariateSpec
 from condition_based.cost import CostParams
 from condition_based.repair import sample_post_repair_mixed
-from condition_based.multi_machine_sim import simulate_multiple_machines
+from condition_based.multi_machine_sim import simulate_multiple_machines, export_machine_level_df
 
 if __name__ == "__main__":
     
