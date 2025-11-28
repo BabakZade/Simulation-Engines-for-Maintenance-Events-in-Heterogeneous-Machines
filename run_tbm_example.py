@@ -202,9 +202,13 @@ loc_fixed_pm = 30.0
 # -----------------------------
 
 
-results_df, all_machines_dynamic_covs = simulate_all_machines(n_machines, t_obs, m, n_dynamic_features, delta_t, T_machines, push,
+results_df, all_machines_dynamic_covs = simulate_all_machines(n_machines, t_obs, m, n_dynamic_features, delta_t, 
+                     #Preventive maintenance interval for each machine and PM effectiveness parameter ("push")
+                     T_machines, push,
+                     #Failure process
                      include_minor, model_type_minor, shape_minor, scale_minor, intercept_minor, with_covariates_minor,
                      include_catas, model_type_catas, shape_catas, scale_catas, intercept_catas, with_covariates_catas,
+                     # Machine heterogeneity
                      fixed_covs, machines_dynamic_covs, beta_fixed, beta_dynamic, beta_multinom_fixed, beta_multinom_dynamic,
                      n_minor_types, cov_update_fn,
                      # cost-related (lists for minor types)
