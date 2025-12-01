@@ -99,8 +99,3 @@ This simulation engine is developed as part of the **Flanders Make *CostLeap* Pr
 - **KU Leuven** — Operations Management Research Group  
 - **Flanders Make** — Strategic Research Centre for the Manufacturing Industry  
 - **UGent**  
-
-## 📫 Contact
-
-For questions, collaboration, or feedback, please contact:  
-📧 **yue.cai@kuleuven.be**
