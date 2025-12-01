@@ -8,3 +8,24 @@ The CBM engine focuses on degradation-path simulation. It generates stochastic d
 
 Together, these engines provide a flexible environment that facilitates data-driven decision-making in maintenance planning, service provision, and lifecycle cost management.
 
+
+## 📁 Repository Structure
+```
+condition_based/
+    ├── covariates.py
+    ├── degradation.py
+    ├── repair.py
+    ├── cost.py
+    ├── single_machine_sim.py
+    ├── multi_machine_sim.py
+
+time_based/
+    ├── hazard.py
+    ├── failure_type.py
+    ├── cost.py
+    ├── simulation.py
+
+run_tbm_example.py
+run_cbm_example.py
+README.md
+```
