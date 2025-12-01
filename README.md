@@ -65,6 +65,14 @@ time_based/
     ├── cost.py
     ├── simulation.py
 
+figures/
+    ├── TBM_Output_Example.jpg
+    ├── CBM_Output_Example_Gamma.gif
+    ├── CBM_Output_Example_Shock.gif
+    ├── CBM_Output_Example_Gamma+Shock.gif
+
+TBM_Note.pdf
+CBM_Note.pdf
 run_tbm_example.py
 run_cbm_example.py
 README.md
