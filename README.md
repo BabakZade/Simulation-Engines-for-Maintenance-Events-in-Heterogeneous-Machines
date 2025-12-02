@@ -98,4 +98,11 @@ This simulation engine is developed as part of the **Flanders Make *CostLeap* Pr
 
 - **KU Leuven** — Operations Management Research Group  
 - **Flanders Make** — Strategic Research Centre for the Manufacturing Industry  
-- **UGent**  
+- **UGent**
+
+## 📝 Citation
+If you use this repository in your research, please cite:
+
+Cai, Y., Boute, R., & Deprez, L. (2025). Simulation Engines for Maintenance Events in Heterogeneous Machines. 
+GitHub repository: https://github.com/COSTLEAP-Project/Simulation-Engines-for-Maintenance-Events-in-Heterogeneous-Machines
+
