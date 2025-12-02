@@ -69,7 +69,7 @@ if __name__ == "__main__":
         'dist_minor': 'proportional', # Minor repair distribution type
         'rho_minor': 0.5             # Minor repair effectiveness
     }
-    
+    # Major repair uses the default setting
     # Observation Noise Parameters
     noise_params_shared = {
         "type": "additive_normal",
