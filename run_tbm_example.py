@@ -25,7 +25,7 @@ T_machines = {i: T_value for i in range(1, n_machines + 1)}
 
 # push = 0.0 → PM has no restorative effect (AGAO)
 # push = 1.0 → PM restores fully (AGAN)
-push = 0.5
+push = 0.5  # restoration factor
 
 # (C) Fixed covariates (user supplies — here we generate a simple example)
 def generate_fixed_covs(n_machines, n_covs, probs):
@@ -74,8 +74,7 @@ machines_dynamic_covs = {
 # User-defined dynamic covariate update rule
 def example_covariate_update_type3_col0(dynamic_covs, failure_type, valid_indices, machine_id):
     """
-    Example covariate update function: Update first column when failure type 3 occurs
-    This is the default behavior from the original implementation.
+    Example covariate update function: Update the dynamic covariate when failure type 3 occurs
     
     Parameters:
     -----------
@@ -89,7 +88,7 @@ def example_covariate_update_type3_col0(dynamic_covs, failure_type, valid_indice
     
     Example Usage:
     --------------
-    This function updates the first column (index 0) of dynamic_covs from valid_indices onwards,
+    This function updates the specific dynamic_covs from valid_indices onwards,
     setting it to 1, but only if:
     1. The failure type is 3
     2. The first column hasn't been updated yet (all zeros)
