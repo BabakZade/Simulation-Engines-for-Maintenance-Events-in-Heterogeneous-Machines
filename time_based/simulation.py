@@ -443,7 +443,7 @@ def simulate_all_machines(n_machines, t_obs, m, n_dynamic_features, delta_t, T_m
                         dynamic_cov_value = np.nan
                     dynamic_cov_at_failure.append(dynamic_cov_value)
     
-                df_machine[f'dynamic_cov_{i+1}_at_failure'] = dynamic_cov_at_failure
+                df_machine[f'dynamic_cov_{i+1}_at_event'] = dynamic_cov_at_failure
 
         all_results.append(df_machine)
 
