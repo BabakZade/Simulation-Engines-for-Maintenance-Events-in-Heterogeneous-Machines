@@ -15,7 +15,7 @@ from time_based.simulation import simulate_all_machines
 
 # (A) Number of machines and observation time
 n_machines = 5
-t_obs = 5.0
+t_obs = 1000
 m = 1000
 delta_t = t_obs / m
 
@@ -61,7 +61,7 @@ def generate_fixed_covs(n_machines, n_covs, probs):
 
 # Generate fixed covariates (user-defined)
 np.random.seed(4)  # for repetition
-fixed_covs = generate_fixed_covs(n_machines=5, n_covs=4, probs=[0.5, 0.5, 0.5, 0.5])
+fixed_covs = generate_fixed_covs(n_machines, n_covs=4, probs=[0.5, 0.5, 0.5, 0.5])
 
 # (D) Dynamic covariates (user supplies initial trajectories)
 n_dynamic_features = 1
@@ -124,8 +124,8 @@ with_covariates_minor = True
 # --- Catastrophic hazard model ---
 include_catas = True
 model_type_catas = "weibull"
-shape_catas = 2.0  # k_c
-scale_catas = 5   # alpha_c (corresponds to alpha_c = 0.2 in EJOR paper)
+shape_catas = 3.37  # k_c
+scale_catas = 195   # alpha_c (corresponds to alpha_c = 0.2 in EJOR paper)
 intercept_catas = None  # Not for Weibull
 with_covariates_catas = False
 
@@ -224,4 +224,5 @@ results_df, all_machines_dynamic_covs = simulate_all_machines(n_machines, t_obs,
 
 print("\n--- Simulation completed ---")
 print(results_df.head())
+results_df.to_csv("result.csv", index=False, sep =';')
 
