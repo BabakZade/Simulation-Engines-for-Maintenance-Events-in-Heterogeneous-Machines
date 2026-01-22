@@ -353,6 +353,24 @@ def simulate_path_with_covariates(
                 degra_level_latent.append(x_lat)
                 degra_level_observed.append(x_obs)
     
+    # ========== FIX: Record final covariates after loop exits ==========
+    if covariate_manager:
+        covariate_manager.update_covariates(t, x_lat, dt)
+        current_covariates_dict = dict(
+            zip(covariate_manager.get_covariate_names(), 
+                covariate_manager.get_covariate_vector())
+        )
+        covariate_history.append({'time': t, 'covariates': current_covariates_dict})
+    
+    if cost_covariate_manager:
+        cost_covariate_manager.update_covariates(t, x_lat, dt)
+        current_cost_covariates_dict = dict(
+            zip(cost_covariate_manager.get_covariate_names(), 
+                cost_covariate_manager.get_covariate_vector())
+        )
+        cost_covariate_history.append({'time': t, 'cost_covariates': current_cost_covariates_dict})
+
+    
     # Compute cost statistics
     cost_by_type = {
         'perfect_pm': sum(e['cost'] for e in events if e['type'] == 'perfect_preventive_maintenance'),
